@@ -1,93 +1,193 @@
-# shiny-solarr
+# solarModel
 
+A Shiny front-end for [`solarr`](https://github.com/beniamino98/solarr): specify and estimate a `solarModel`
+on CAMS radiation data, inspect the residuals produced at each stage of the
+fitting pipeline, and run the diagnostic tests shipped with the package.
 
+## Running
 
-## Getting started
+From the parent directory:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/solarr-project-public/shiny/shiny-solarr.git
-git branch -M main
-git push -uf origin main
+```r
+shiny::runApp("shiny/shiny-solarr")
 ```
 
-## Integrate with your tools
+or from inside this folder:
 
-* [Set up project integrations](https://gitlab.com/solarr-project-public/shiny/shiny-solarr/-/settings/integrations)
+```r
+shiny::runApp()
+```
 
-## Collaborate with your team
+## What it does
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+**Data** - the raw series for any of the 18 locations in `solarr::CAMS_data`:
+observed GHI against CAMS clear sky, the seasonal profile across years, the
+monthly distribution, and the underlying table.
 
-## Test and Deploy
+**Solar geometry** - the deterministic quantities behind the model, from
+`solarr::seasonalSolarFunctions`. Needs no fitted model. Declination, equation
+of time, extraterrestrial irradiance and its daily total, sunset hour angle,
+day length and noon altitude, one per tab and all together; the intraday sun
+position and Hottel clear-sky irradiance for a chosen date, with collector tilt
+and azimuth; the sun path on the solstices and equinoxes; the analemma; and the
+day-by-day values as a table and a CSV. The site follows the location picked in
+the sidebar, or coordinates typed in by hand.
 
-Use the built-in continuous integration in GitLab.
+The *Sunrise / sunset defined as* control chooses the altitude of the sun's
+centre at which the event is declared, from `$horizons`: `geometric` (the
+centre on the astronomical horizon), `refraction` (-34'), `upper_limb` (-50',
+what almanacs publish) and the three twilights. It drives sunrise, sunset, day
+length and the sunset hour angle. It deliberately does **not** drive `H_on`:
+above the atmosphere there is no refraction, so the extraterrestrial radiation
+stays geometric and keeps matching the `H0` the clear-sky model is fitted on -
+which is also why `solar_seasonal()` calls `Hon(dates, lat)` without the
+altitude, exactly as `seasonalClearsky` does.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+Times will not match an almanac to the minute even on `upper_limb`, because the
+app passes the site altitude and the resulting horizon dip lengthens the day a
+little further: Bologna on 21 June comes out 05:27-21:04 against timeanddate's
+05:31-21:00. Published tables normally ignore the observer's elevation.
 
-***
+The intraday frame comes straight from `seasonalSolarFunctions$solar_angles()`,
+with `$azimut_angle()` for the signed azimuth and `$clearsky()` for the Hottel
+curve. Sunrise, sunset and solar noon are read off the sunset hour angle rather
+than scanned from the time grid, so they do not depend on the chosen step, and
+they carry daylight saving because `solar_time()` applies it.
 
-# Editing this README
+`solar_event_time()` in `R/utils_solar.R` is what converts an hour angle into a
+clock time. It anchors on the row nearest solar noon and steps 15 degrees per
+hour in absolute time, rather than interpolating the grid: the hour angle wraps
+from +180 to -180 during the night, and on the two daylight-saving switch-over
+days the clock grid repeats or skips an hour, so interpolation is fragile there.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+**Estimation** - fires `solarModel$new(spec)$fit()` with the specification set in
+the sidebar. Reports the point estimates next to the standard errors from
+`spec$std.errors`, the log-likelihood, AIC and BIC from `solarModel_AIC_BIC()`,
+the four fitted seasonal components (clear sky, mean radiation, seasonal mean,
+seasonal volatility - one per tab), the monthly mixture parameters split into
+means, standard deviations and probabilities, and the twelve fitted densities.
 
-## Suggestions for a good README
+**Residuals** - one series at a time along the estimation chain:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+| Series | Produced by | Serial correlation expected? |
+|---|---|---|
+| `Yt_tilde` | `Yt` minus its seasonal mean | yes, this is the ARMA input |
+| `eps` | ARMA residuals | no, but the squares stay correlated |
+| `eps_tilde` | `eps / sigma_bar` | no, but the squares stay correlated |
+| `u_tilde` | `eps_tilde / sigma` (GARCH) | no, and neither in the squares |
+| `z_tilde` | `u_tilde` standardized by its monthly mixture moments | no, and neither in the squares |
 
-## Name
-Choose a self-explaining name for your project.
+`z_tilde` is not stored on the model: the app rebuilds it exactly as
+`solarModel_test_autocorr()` does. Each series gets the time plot, ACF, ACF of
+the squares, PACF, monthly boxplots, a histogram against a normal or against
+the fitted mixture, and a QQ-plot. For the mixture the QQ-plot goes through the
+PIT, so pooling months stays valid.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+**Diagnostics** - the tests exported by `solarr`:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- `solarModel_test_autocorr()` for Breusch-Godfrey, Ljung-Box or Box-Pierce at
+  several lags, with the outcome compared against the reference behaviour the
+  package encodes;
+- `solarModel_test_distribution()` for the monthly Kolmogorov-Smirnov test of
+  `u_tilde` against the fitted mixture and against a normal;
+- `solarModel_PIT()` / `solarModel_PIT_test()` with the histogram and the ECDF
+  against a Kolmogorov-Smirnov band;
+- `solarModel_test_LPD()` and `solarModel_test_forecast()`;
+- `solarModel_AIC_BIC()`.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The four boxes at the top summarise the outcome. The tests read the controls
+when *Run diagnostics* is pressed and after each new fit, so changing a control
+does not silently re-estimate everything.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+**Export** - the fitted R6 object as `.rds` (readable back with `readRDS()`, or
+re-loadable from the sidebar), the tables as CSV, and an R snippet that
+reproduces the fit outside the app.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## Layout
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```
+shiny-solarr/
+  app.R                  UI skeleton and the top-level server
+  www/styles.css         the visual system: cards, tables, controls
+  R/
+    aaa_setup.R          packages and shared constants (sourced first)
+    constants.R          UI choices, series metadata, responsive column recipes
+    utils_model.R        build the spec, fit, unpack coefficients and residuals
+    utils_plots.R        ggplot2 helpers, reference densities, value boxes
+    utils_tables.R       the single DT constructor every table goes through
+    utils_solar.R        deterministic solar geometry for a site
+    mod_spec.R           sidebar: data selection and full specification
+    mod_data.R           Data panel
+    mod_solar.R          Solar geometry panel
+    mod_estimate.R       Estimation panel
+    mod_residuals.R      Residuals panel
+    mod_diagnostics.R    Diagnostics panel
+    mod_export.R         Export panel
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Two layout rules are worth knowing before editing the UI. Every `layout_columns()`
+takes its widths from `cols_4()`, `cols_2()`, `cols_split()` or `cols_row()` in
+`R/constants.R`: those pass a vector of the same length at every breakpoint,
+because mixing a scalar with a vector makes bslib size the grid from the scalar.
+And a `layout_columns()` wrapping a single child sets `--bs-columns: 1`, which
+cascades into every grid nested inside it - put the card in the `tagList()`
+directly instead.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Shiny sources every file under `R/` before `app.R`, into an environment those
+files share. Variables created in `app.R` are not visible from `R/`, which is
+why the packages and the shared constants live in `R/aaa_setup.R` rather than
+in a `global.R`.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Dependencies
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+`shiny`, `bslib`, `ggplot2`, `dplyr`, `tidyr`, `DT`, `plotly`, `shinyWidgets`,
+`solarr`, and `lmtest` for the Breusch-Godfrey test (the app falls back to a
+message if it is missing).
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Publishing to shinyapps.io
 
-## License
-For open source projects, say how it is licensed.
+`renv.lock` records the package versions used by this app, including the exact
+GitHub revision of `solarr`. The deployment uses the official repository at
+<https://github.com/beniamino98/solarr>; it does not require the local package
+checkout. Keep `renv.lock` selected in the Publish dialog. `.rscignore` excludes
+local editor configuration and documentation from the deployment bundle.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Before publishing, restart R so it loads the GitHub-installed package, then
+check the deployment dependencies from this folder:
+
+```r
+deps <- rsconnect::appDependencies(appDir = ".")
+deps[deps$Package == "solarr", ]
+```
+
+The `Source` column for `solarr` must be `github`. You can then publish using
+the IDE's Publish button. No installation runs inside the app on the server.
+
+On another machine, install the same `solarr` revision before publishing:
+
+```r
+lock <- jsonlite::read_json("renv.lock")
+remotes::install_github(
+  "beniamino98/solarr",
+  ref = lock$Packages$solarr$RemoteSha,
+  upgrade = "never",
+  force = TRUE,
+  build_vignettes = FALSE
+)
+```
+
+After deliberately updating dependencies, regenerate `renv.lock` with
+`renv::snapshot(project = ".", prompt = FALSE)` and repeat the dependency check.
+
+## Known limitations
+
+- **`spec$std.errors$params` is a placeholder.** It repeats the values of
+  `alpha` and `beta` instead of their standard errors, which would give a
+  t-statistic of exactly 1. The transformation bounds are sample extrema of
+  `Xt` rather than maximum likelihood estimates, so the app blanks the standard
+  error, the statistic and the p-value for that component.
+
+- **`solarModel_test_forecast()` is slow**: it inverts the predictive CDF one
+  day at a time, roughly ten seconds per thousand observations, and blocks the
+  session while it runs. It sits behind its own button with the expected cost
+  printed next to it.

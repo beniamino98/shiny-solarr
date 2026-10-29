@@ -1,0 +1,12 @@
+.claude
+.DS_Store
+.gitignore
+README.md
+tools
+public_export
+.project-documentation
+.code-graph
+AGENTS.md
+.codex
+.agents
+rsconnect

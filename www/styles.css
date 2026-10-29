@@ -1,0 +1,752 @@
+/* ===========================================================================
+   solarModel - visual system
+   =========================================================================== */
+
+:root {
+  --sl-primary:      #1f4e79;
+  --sl-primary-dk:   #163a5a;
+  --sl-primary-soft: #eaf1f8;
+  --sl-accent:       #e07b39;
+  --sl-ok:           #2e7d32;
+  --sl-ok-soft:      #e6f2e7;
+  --sl-bad:          #c62828;
+  --sl-bad-soft:     #fbe9e9;
+  --sl-ink:          #1c2733;
+  --sl-muted:        #6b7885;
+  --sl-line:         #e2e7ee;
+  --sl-surface:      #ffffff;
+  --sl-canvas:       #f4f6f9;
+  --sl-radius:       10px;
+}
+
+body {
+  background-color: var(--sl-canvas);
+  color: var(--sl-ink);
+  font-size: 0.9rem;
+}
+
+/* --- navbar --------------------------------------------------------------- */
+
+.navbar .navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-right: 1.75rem;
+  padding-right: 1.25rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff !important;
+}
+
+.navbar .navbar-nav { gap: 0.1rem; }
+
+/* The navbar is dark but Bootstrap keeps the light-navbar link colour, which
+   leaves the tabs grey on blue. Set them explicitly. */
+.navbar .nav-link,
+.navbar .nav-link > * {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active,
+.navbar .nav-link.active > * {
+  color: #fff !important;
+}
+
+.navbar .navbar-text,
+.navbar .navbar-text * { color: rgba(255, 255, 255, 0.88) !important; }
+
+.navbar .navbar-toggler {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar .nav-link {
+  font-size: 0.875rem;
+  padding-left: 0.85rem !important;
+  padding-right: 0.85rem !important;
+}
+
+.navbar .nav-link.active {
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.85);
+}
+
+.navbar-text {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* --- cards ---------------------------------------------------------------- */
+
+.card {
+  border: 1px solid var(--sl-line);
+  border-radius: var(--sl-radius);
+  box-shadow: 0 1px 2px rgba(28, 39, 51, 0.04);
+}
+
+.card-header {
+  background-color: var(--sl-surface);
+  border-bottom: 1px solid var(--sl-line);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  padding: 0.6rem 1rem;
+}
+
+.card-body { padding: 1rem; }
+
+/* Section heading used inside a card body */
+.sl-subhead {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  margin-bottom: 0.5rem;
+}
+
+/* Explanatory paragraph under a panel title */
+.sl-note {
+  font-size: 0.83rem;
+  color: var(--sl-muted);
+  margin: 0.35rem 0 0.9rem 0;
+  max-width: 78ch;
+}
+
+/* --- value boxes ---------------------------------------------------------- */
+
+.bslib-value-box {
+  border-radius: var(--sl-radius);
+  border: 1px solid transparent;
+}
+
+.bslib-value-box .value-box-area {
+  padding: 0.7rem 0.95rem !important;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.bslib-value-box .value-box-title {
+  font-size: 0.72rem !important;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* Four boxes across a partly-filled row leave little room: step the number
+   down before it has to be clipped. */
+@media (max-width: 1300px) {
+  .bslib-value-box .value-box-value { font-size: 1.15rem !important; }
+  .sl-unit { font-size: 0.68rem; }
+}
+
+.bslib-value-box .value-box-value {
+  font-size: 1.3rem !important;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A long label wraps to a second line rather than losing its tail */
+.bslib-value-box .value-box-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.sl-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.sl-value > *:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sl-unit {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  opacity: 0.65;
+  flex: none;
+}
+
+/* The neutral boxes read better light than as solid dark blocks */
+.bslib-value-box.bg-secondary {
+  background-color: var(--sl-surface) !important;
+  color: var(--sl-ink) !important;
+  border-color: var(--sl-line);
+}
+.bslib-value-box.bg-secondary .value-box-title { color: var(--sl-muted); }
+
+/* --- sidebar -------------------------------------------------------------- */
+
+.bslib-sidebar-layout > .sidebar {
+  background-color: var(--sl-surface);
+  border-right: 1px solid var(--sl-line);
+}
+
+.bslib-sidebar-layout > .sidebar .sidebar-content { padding: 0.9rem; }
+
+.sidebar .sidebar-title,
+.sidebar > .sidebar-content > .sidebar-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+}
+
+.sidebar .accordion { --bs-accordion-border-color: var(--sl-line); }
+
+.sidebar .accordion-button {
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--sl-surface);
+  color: var(--sl-ink);
+}
+
+.sidebar .accordion-button:not(.collapsed) {
+  background-color: var(--sl-primary-soft);
+  color: var(--sl-primary-dk);
+  box-shadow: none;
+}
+
+.sidebar .accordion-button:focus { box-shadow: none; }
+.sidebar .accordion-body { padding: 0.85rem 0.75rem; }
+
+/* --- forms ---------------------------------------------------------------- */
+
+.form-label,
+.shiny-input-container > label,
+.control-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sl-muted);
+  letter-spacing: 0.015em;
+  margin-bottom: 0.3rem;
+}
+
+.form-control, .form-select, .selectize-input {
+  font-size: 0.86rem;
+  border-color: var(--sl-line);
+}
+
+.form-control:focus, .form-select:focus, .selectize-input.focus {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 0.15rem rgba(31, 78, 121, 0.12);
+}
+
+.shiny-input-container { margin-bottom: 0.75rem; }
+.shiny-input-container:last-child { margin-bottom: 0; }
+
+.help-block, .shiny-input-container .help-block {
+  font-size: 0.78rem;
+  color: var(--sl-muted);
+  margin-top: 0.35rem;
+}
+
+.form-check-label { font-size: 0.85rem; }
+.form-check-input:checked { background-color: var(--sl-primary); border-color: var(--sl-primary); }
+
+/* Radio/checkbox groups laid out inline keep an even rhythm */
+.shiny-input-radiogroup.shiny-input-container-inline .form-check,
+.shiny-input-checkboxgroup.shiny-input-container-inline .form-check {
+  margin-right: 1rem;
+}
+
+/* Sliders */
+.irs--shiny .irs-bar, .irs--shiny .irs-handle > i:first-child { background: var(--sl-primary); }
+.irs--shiny .irs-handle { border-color: var(--sl-primary); }
+.irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single { background-color: var(--sl-primary); }
+.irs--shiny .irs-min, .irs--shiny .irs-max { font-size: 0.7rem; }
+.irs--shiny .irs-grid-text { font-size: 0.62rem; color: var(--sl-muted); }
+
+/* --- buttons -------------------------------------------------------------- */
+
+.btn {
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+}
+
+.btn .fa, .btn .fas, .btn .far, .btn svg { margin-right: 0.4rem; }
+
+.btn-primary {
+  background-color: var(--sl-primary);
+  border-color: var(--sl-primary);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--sl-primary-dk);
+  border-color: var(--sl-primary-dk);
+}
+
+/* One consistent width for the action buttons that sit alone in a panel */
+.sl-action { min-width: 12.5rem; }
+
+/* Download buttons stack as an even column of equally sized controls */
+.sl-downloads {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.sl-downloads .btn {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.sl-btn-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+/* --- underline tab sets inside cards -------------------------------------- */
+
+.nav-underline {
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--sl-line);
+}
+
+.nav-underline .nav-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  color: var(--sl-muted);
+  padding: 0.45rem 0.85rem;
+  border-bottom-width: 2px;
+}
+
+.nav-underline .nav-link:hover { color: var(--sl-primary); }
+
+.nav-underline .nav-link.active {
+  color: var(--sl-primary);
+  border-bottom-color: var(--sl-primary);
+}
+
+/* --- badges --------------------------------------------------------------- */
+
+.sl-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background-color: var(--sl-primary-soft);
+  color: var(--sl-primary-dk);
+  margin-right: 0.35rem;
+}
+
+.sl-badge-ok  { background-color: var(--sl-ok-soft);  color: var(--sl-ok); }
+.sl-badge-bad { background-color: var(--sl-bad-soft); color: var(--sl-bad); }
+
+code, .sl-formula {
+  font-size: 0.82em;
+  color: var(--sl-primary-dk);
+  background-color: var(--sl-primary-soft);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+pre {
+  background-color: #fbfcfd;
+  border: 1px solid var(--sl-line);
+  border-radius: 8px;
+  padding: 0.8rem;
+  font-size: 0.8rem;
+  color: var(--sl-ink);
+  /* the code is meant to be copied verbatim: no <- to arrow ligature */
+  font-variant-ligatures: none;
+  overflow-x: auto;
+}
+
+/* ===========================================================================
+   DataTables
+   =========================================================================== */
+
+.dataTables_wrapper, .dt-container { font-size: 0.84rem; }
+
+/* width:100% is a hint: with nowrap cells the table grows past it when the
+   content needs more room, and the wrapper below scrolls. */
+.dataTables_wrapper, .dt-container { overflow-x: auto; }
+
+table.dataTable.solar-table {
+  width: 100% !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0 0 0.5rem 0 !important;
+}
+
+table.dataTable.solar-table thead th {
+  background-color: transparent;
+  border-bottom: 1.5px solid var(--sl-primary) !important;
+  border-top: none !important;
+  color: var(--sl-muted);
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.7rem !important;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+table.dataTable.solar-table tbody td {
+  border-top: 1px solid var(--sl-line) !important;
+  padding: 0.45rem 0.7rem !important;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* A free-text cell is allowed to wrap: notes and messages are prose */
+table.dataTable.solar-table.sl-wrap tbody td { white-space: normal; }
+
+table.dataTable.solar-table tbody tr:first-child td { border-top: none !important; }
+
+table.dataTable.solar-table.stripe tbody tr.odd td,
+table.dataTable.solar-table.stripe tbody tr:nth-child(odd) > * {
+  box-shadow: none;
+  background-color: #fbfcfd;
+}
+
+table.dataTable.solar-table.hover tbody tr:hover > * {
+  box-shadow: none;
+  background-color: var(--sl-primary-soft);
+}
+
+/* First column carries the row label: make it read as one */
+table.dataTable.solar-table tbody td:first-child { font-weight: 600; color: var(--sl-ink); }
+table.dataTable.solar-table.sl-plain tbody td:first-child { font-weight: 400; }
+
+/* Sort arrows: quieter than the default */
+table.dataTable.solar-table thead th.sorting:before,
+table.dataTable.solar-table thead th.sorting:after,
+table.dataTable.solar-table thead th.sorting_asc:before,
+table.dataTable.solar-table thead th.sorting_asc:after,
+table.dataTable.solar-table thead th.sorting_desc:before,
+table.dataTable.solar-table thead th.sorting_desc:after {
+  opacity: 0.25;
+  font-size: 0.75em;
+}
+table.dataTable.solar-table thead th.sorting_asc:before,
+table.dataTable.solar-table thead th.sorting_desc:after { opacity: 0.9; color: var(--sl-primary); }
+
+/* Footer: info + pagination on one quiet line */
+.dataTables_wrapper .dataTables_info,
+.dt-container .dt-info {
+  font-size: 0.76rem;
+  color: var(--sl-muted);
+  padding-top: 0.55rem !important;
+}
+
+.dataTables_wrapper .dataTables_paginate,
+.dt-container .dt-paging { padding-top: 0.35rem !important; }
+
+.dataTables_wrapper .pagination { margin-bottom: 0; }
+
+.dataTables_wrapper .page-link {
+  font-size: 0.78rem;
+  color: var(--sl-muted);
+  border-color: var(--sl-line);
+  padding: 0.2rem 0.55rem;
+}
+
+.dataTables_wrapper .page-item.active .page-link {
+  background-color: var(--sl-primary);
+  border-color: var(--sl-primary);
+  color: #fff;
+}
+
+.dataTables_wrapper .page-item.disabled .page-link { color: #c3cad3; }
+
+/* Search box: left aligned, no stretched empty row above the table */
+.dataTables_wrapper .dataTables_filter,
+.dt-container .dt-search {
+  margin-bottom: 0.6rem;
+  text-align: left !important;
+  float: none !important;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.dataTables_wrapper .dataTables_filter label,
+.dt-container .dt-search label {
+  margin-bottom: 0;
+  width: auto;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dt-container .dt-search input {
+  font-size: 0.82rem;
+  border: 1px solid var(--sl-line);
+  border-radius: 6px;
+  padding: 0.28rem 0.6rem;
+  margin-left: 0;
+  min-width: 15rem;
+}
+
+.dataTables_wrapper .dataTables_length select { font-size: 0.82rem; }
+
+/* Cells the diagnostics colour by outcome */
+table.dataTable.solar-table td.sl-pass,
+table.dataTable.solar-table td.sl-fail { font-weight: 600; }
+
+/* --- plotly --------------------------------------------------------------- */
+
+.plotly .modebar { opacity: 0.35; }
+.plotly:hover .modebar { opacity: 1; }
+
+/* --- misc ----------------------------------------------------------------- */
+
+.shiny-notification { font-size: 0.85rem; border-radius: 8px; }
+
+hr { border-color: var(--sl-line); opacity: 1; margin: 1rem 0; }
+
+/* Keep the bootstrap-select dropdown compact */
+.bootstrap-select > .dropdown-toggle {
+  font-size: 0.86rem;
+  border: 1px solid var(--sl-line) !important;
+  background-color: #fff !important;
+  color: var(--sl-ink) !important;
+  padding: 0.36rem 0.7rem;
+}
+.bootstrap-select .dropdown-menu { font-size: 0.85rem; }
+.bootstrap-select .dropdown-menu li a { padding: 0.3rem 0.7rem; }
+
+
+/* --- control rows --------------------------------------------------------- */
+
+/* A checkbox sitting beside a slider or a select needs to drop to the same
+   baseline as the input, not to the label above it. */
+.sl-inline-check {
+  display: flex;
+  align-items: center;
+  min-height: 2.35rem;
+}
+
+/* The offset only makes sense while the checkbox shares a row with the
+   labelled input it belongs to; stacked, it would just add a gap. */
+@media (min-width: 992px) {
+  .sl-inline-check { margin-top: 1.35rem; }
+}
+
+.sl-inline-check .shiny-input-container { margin-bottom: 0; }
+
+/* Slider labels sit tight against the track */
+.js-irs-0, .irs--shiny { margin-top: 0.1rem; }
+.irs--shiny .irs-line { top: 27px; }
+.irs--shiny .irs-bar  { top: 27px; }
+.irs--shiny .irs-handle { top: 21px; }
+
+/* Uniform vertical rhythm between the stacked cards of a panel */
+.bslib-grid > * { min-width: 0; }
+
+/* Plot outputs never overflow their card */
+.shiny-plot-output img { max-width: 100%; }
+
+
+/* Key/value tables carry no column names: hide the empty header band */
+table.dataTable.solar-table.sl-noheader thead { display: none; }
+table.dataTable.solar-table.sl-noheader tbody tr:first-child td {
+  border-top: none !important;
+}
+table.dataTable.solar-table.sl-noheader tbody td:first-child {
+  width: 40%;
+  color: var(--sl-muted);
+  font-weight: 600;
+}
+
+/* A card header that also carries a tab set stacks the two */
+.card-header:has(.nav) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-bottom: 0;
+}
+
+.card-header .nav-underline {
+  border-bottom: none;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.card-header .nav-underline .nav-link { padding: 0.35rem 0.7rem; }
+
+
+/* Sort arrows need their own gutter, or they collide with a right-aligned
+   header label. */
+table.dataTable.solar-table thead th.sorting,
+table.dataTable.solar-table thead th.sorting_asc,
+table.dataTable.solar-table thead th.sorting_desc {
+  padding-right: 1.5rem !important;
+}
+
+table.dataTable.solar-table thead th.dt-right.sorting,
+table.dataTable.solar-table thead th.dt-right.sorting_asc,
+table.dataTable.solar-table thead th.dt-right.sorting_desc {
+  padding-left: 0.7rem !important;
+}
+
+table.dataTable.solar-table thead th:before,
+table.dataTable.solar-table thead th:after { right: 0.45rem !important; }
+
+/* bslib pushes the nav of a titled card to the right; keep it under the title */
+.card-header .nav {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+
+/* --- month picker: real checkboxes ---------------------------------------- */
+
+.bootstrap-select .dropdown-menu {
+  border: 1px solid var(--sl-line);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(28, 39, 51, 0.10);
+  padding: 0.3rem;
+}
+
+.bootstrap-select .dropdown-menu li a {
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 0.32rem 0.5rem;
+}
+
+.bootstrap-select .dropdown-menu li a:hover,
+.bootstrap-select .dropdown-menu li a:focus {
+  background-color: var(--sl-primary-soft);
+  color: var(--sl-primary-dk);
+}
+
+/* The stock tick on the right becomes a checkbox on the left */
+.bootstrap-select .dropdown-menu li a .check-mark { display: none !important; }
+
+.bootstrap-select .dropdown-menu li a::before {
+  content: "";
+  flex: none;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-right: 0.6rem;
+  border: 1.5px solid #c3ccd6;
+  border-radius: 3px;
+  background-color: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.7rem 0.7rem;
+}
+
+.bootstrap-select .dropdown-menu li.selected a::before,
+.bootstrap-select .dropdown-menu li a.selected::before {
+  border-color: var(--sl-primary);
+  background-color: var(--sl-primary);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='M6 10l3 3 6-6'/%3e%3c/svg%3e");
+}
+
+.bootstrap-select .dropdown-menu li.selected a { background-color: transparent; }
+
+/* All / None header */
+.bootstrap-select .bs-actionsbox {
+  padding: 0.35rem 0.4rem 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--sl-line);
+  margin-bottom: 0.3rem;
+}
+
+.bootstrap-select .bs-actionsbox .btn-group { width: 100%; gap: 0.35rem; display: flex; }
+
+.bootstrap-select .bs-actionsbox .btn {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--sl-line);
+  border-radius: 5px;
+  background-color: #fff;
+  color: var(--sl-muted);
+}
+
+.bootstrap-select .bs-actionsbox .btn:hover {
+  background-color: var(--sl-primary-soft);
+  color: var(--sl-primary-dk);
+  border-color: var(--sl-primary-soft);
+}
+
+.bootstrap-select > .dropdown-toggle:after { margin-left: auto; }
+
+
+/* --- table toolbar: a filter box sharing its row with a control ----------- */
+
+.sl-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.sl-table-toolbar .shiny-input-container { margin-bottom: 0; width: auto; }
+
+.sl-toolbar-check .form-check { margin-bottom: 0; }
+.sl-toolbar-check .form-check-label { font-size: 0.85rem; }
+
+.sl-toolbar-search .form-control {
+  min-width: 15rem;
+  font-size: 0.82rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 6px;
+}
+
+/* --- a control that needs to line up with a labelled input beside it ------ */
+
+.sl-field { display: flex; flex-direction: column; }
+.sl-field > .form-label { margin-bottom: 0.3rem; }
+.sl-field > .btn { padding-top: 0.42rem; padding-bottom: 0.42rem; }
+
+/* --- the advanced-settings popover --------------------------------------- */
+
+.popover.sl-popover {
+  max-width: 22rem;
+  border: 1px solid var(--sl-line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(28, 39, 51, 0.12);
+}
+
+.popover.sl-popover .popover-header {
+  background-color: var(--sl-surface);
+  border-bottom: 1px solid var(--sl-line);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+}
+
+.popover.sl-popover .popover-body { padding: 0.9rem; }
+.popover.sl-popover .shiny-input-container:last-child { margin-bottom: 0; }
